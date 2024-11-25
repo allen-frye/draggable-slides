@@ -1,3 +1,4 @@
+gsap.registerPlugin(Draggable, Observer);
 let texts = [];
 let targets = [];
 let targetScore = 3;
@@ -83,22 +84,34 @@ function enableCardDragging() {
   cards.forEach(card => {
     Draggable.create(card, {
       type: "x,y",
-      onThrowComplete: function () {
+      throwProps: true, // Enable inertia
+      onDragEnd: function () {
         const direction = this.x > window.innerWidth / 2 ? "right" : "left";
         const text = this.target.innerText;
 
-        if (direction === "right") scores[text].correct++;
-       
-        else scores[text].wrong++;
-       
+        // Calculate off-screen end positions
+        const endX = direction === "right" ? window.innerWidth + 300 : -300;
+        const endY = this.y + (Math.random() * 200 - 100); // Add a slight random tilt for realism
 
+        // Animate the card off-screen with inertia
         gsap.to(this.target, {
+          x: endX,
+          y: endY,
           scale: 0.1,
           opacity: 0,
+          duration: 1.5, // Adjust duration for smoother exit
+          ease: "power1.out",
           onComplete: () => this.target.remove()
         });
-        console.log(scores[text].right);
-        console.log(scores[text].wrong);
+
+        // Update scores
+        if (direction === "right") scores[text].correct++;
+        else scores[text].wrong++;
+
+        // Log updated scores
+        console.log(`Updated scores for "${text}":`, scores[text]);
+
+        // Check game completion and update active card
         checkGameCompletion();
         setActiveCard();
       }

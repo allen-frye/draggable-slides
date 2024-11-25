@@ -1,0 +1,24 @@
+/* Basic styling */
+body {
+    font-family: Arial, sans-serif;
+}
+
+#admin-panel, #game-container, #result-panel {
+    text-align: center;
+}
+
+.card {
+    position: absolute;
+    top: 70%;
+    left: 50%;
+    min-width: 500px;
+    
+    transform: translate(-50%, -50%);
+    aspect-ratio: 16 / 9;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    padding: 20px;
+    cursor: grab;
+  }
+
+/* Additional styling as needed */

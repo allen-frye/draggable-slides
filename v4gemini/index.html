@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcard App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="admin-panel">
+        <h2>Admin Panel</h2>
+        <textarea id="text-input" placeholder="Enter text items, separated by commas"></textarea>
+        <button id="add-items-button">Add Items</button>
+
+        <h3>Target Items</h3>
+        <ul id="target-items-list">
+        </ul>
+
+        <label for="target-score">Target Score:</label>
+        <input type="number" id="target-score" value="3">
+
+        <button id="start-game-button">Start Game</button>
+    </div>
+    <div id="game-container">
+        <div class="card active">
+        </div>
+    </div>
+    <div id="result-panel">
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/Draggable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/Observer.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
