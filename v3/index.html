@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flash Card Game</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/Draggable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/Observer.min.js"></script>
+</head>
+<body>
+  <div id="admin-section">
+    <h2>Admin Section</h2>
+    <textarea id="text-input" placeholder="Enter items separated by commas"></textarea>
+    <button id="add-texts">Add Text Items</button>
+    <h3>All Text Items</h3>
+    <ul id="text-list"></ul>
+    <h3>Learning Targets</h3>
+    <ul id="target-list"></ul>
+    <label for="target-score">Target Correct Score:</label>
+    <input type="number" id="target-score" min="1" value="3">
+    <button id="start-game">Start Game</button>
+  </div>
+
+  <div id="game-section" style="display: none;">
+    <div id="flashcard-container"></div>
+    <div id="game-over" style="display: none;">
+      <h2>Great job!</h2>
+      <p id="success-message"></p>
+      <ul id="score-summary"></ul>
+      <button id="restart-game">Restart Game</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

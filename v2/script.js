@@ -51,7 +51,7 @@ document.addEventListener("DOMContentLoaded", function() {
           width: '10%',
           height: '10%',
           opacity: 0,
-          duration: 0.5,
+          duration: 0.25,
           onComplete: nextSlide
         });
       } else if (direction === "right" && this.endX > 100) {
@@ -61,7 +61,7 @@ document.addEventListener("DOMContentLoaded", function() {
           width: '10%',
           height: '10%',
           opacity: 0,
-          duration: 0.5,
+          duration: 0.25,
           onComplete: prevSlide
         });
       } else {
