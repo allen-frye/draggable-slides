@@ -1,4 +1,5 @@
 gsap.registerPlugin(Draggable, Observer);
+
 let texts = [];
 let targets = [];
 let targetScore = 3;
@@ -14,7 +15,7 @@ const successMessage = document.getElementById("success-message");
 const scoreSummary = document.getElementById("score-summary");
 
 document.getElementById("add-texts").addEventListener("click", () => {
-  const input = textInput.value.split(",").map(item => item.trim());
+  const input = textInput.value.split(",").map(item => item.trim()).filter(item => item !== "");
   texts.push(...input);
   updateTextList();
   textInput.value = "";
@@ -56,20 +57,29 @@ function startGame() {
 }
 
 function initializeFlashcards() {
-  flashcardContainer.innerHTML = "";
-  const randomizedTargets = targets
-    .flatMap(target => Array(targetScore).fill(target))
-    .sort(() => Math.random() - 0.5);
+  flashcardContainer.innerHTML = ""; // Clear any existing cards
+  renderNextCard(); // Start with the first card
+}
 
-  randomizedTargets.forEach(text => {
-    const card = document.createElement("div");
-    card.classList.add("flashcard");
-    card.innerText = text;
-    flashcardContainer.appendChild(card);
-  });
+function renderNextCard() {
+  // Check if the game is complete before rendering the next card
+  if (checkGameCompletion()) return;
 
-  setActiveCard();
-  enableCardDragging();
+  // Find remaining targets that haven't met the target score
+  const remainingTargets = targets.filter(target => scores[target].correct < targetScore);
+  if (remainingTargets.length === 0) return; // No remaining targets, stop rendering
+
+  // Pick a random target from the remaining ones
+  const nextCardText = remainingTargets[Math.floor(Math.random() * remainingTargets.length)];
+
+  // Create the new card
+  const card = document.createElement("div");
+  card.classList.add("flashcard");
+  card.innerText = nextCardText;
+  flashcardContainer.appendChild(card);
+
+  // Enable dragging for the new card
+  enableCardDragging(card);
 }
 
 function setActiveCard() {
@@ -78,56 +88,60 @@ function setActiveCard() {
   if (cards.length > 0) cards[0].classList.add("active");
 }
 
-function enableCardDragging() {
-  const cards = document.querySelectorAll(".flashcard");
+function enableCardDragging(card) {
+  Draggable.create(card, {
+    type: "x,y",
+    throwProps: true, // Enable inertia
+    onDragEnd: function () {
+      const direction = this.x > window.innerWidth / 2 ? "right" : "left";
+      const text = this.target.innerText;
 
-  cards.forEach(card => {
-    Draggable.create(card, {
-      type: "x,y",
-      throwProps: true, // Enable inertia
-      onDragEnd: function () {
-        const direction = this.x > window.innerWidth / 2 ? "right" : "left";
-        const text = this.target.innerText;
+      // Calculate off-screen end positions
+      const endX = direction === "right" ? window.innerWidth + 300 : -300;
+      const endY = this.y + (Math.random() * 200 - 100); // Add a slight random tilt for realism
 
-        // Calculate off-screen end positions
-        const endX = direction === "right" ? window.innerWidth + 300 : -300;
-        const endY = this.y + (Math.random() * 200 - 100); // Add a slight random tilt for realism
+      // Animate the card off-screen with inertia
+      gsap.to(this.target, {
+        x: endX,
+        y: endY,
+        scale: 0.1,
+        opacity: 0,
+        duration: 1.5, // Adjust duration for smoother exit
+        ease: "power1.out",
+        onComplete: () => this.target.remove()
+      });
 
-        // Animate the card off-screen with inertia
-        gsap.to(this.target, {
-          x: endX,
-          y: endY,
-          scale: 0.1,
-          opacity: 0,
-          duration: 1.5, // Adjust duration for smoother exit
-          ease: "power1.out",
-          onComplete: () => this.target.remove()
-        });
+      // Update scores
+      if (direction === "right") scores[text].correct++;
+      else scores[text].wrong++;
 
-        // Update scores
-        if (direction === "right") scores[text].correct++;
-        else scores[text].wrong++;
+      // Log updated scores
+      console.log(`Updated scores for "${text}":`, scores[text]);
 
-        // Log updated scores
-        console.log(`Updated scores for "${text}":`, scores[text]);
-
-        // Check game completion and update active card
-        checkGameCompletion();
-        setActiveCard();
-      }
-    });
+      // Render the next card
+      renderNextCard();
+    }
   });
 }
 
+
 function checkGameCompletion() {
-  if (targets.every(target => scores[target].correct >= targetScore)) {
+  const isComplete = targets.every(target => scores[target].correct >= targetScore);
+
+  if (isComplete) {
     endGame();
+    return true;
   }
+
+  return false;
 }
 
 function endGame() {
   document.getElementById("flashcard-container").style.display = "none";
-  document.getElementById("game-over").style.display = "block";
+  const gameOverElement = document.getElementById("game-over");
+
+  // Show the game-over summary
+  gameOverElement.style.display = "block"; // Ensure it's visible
   successMessage.innerText = `You now understand how to pronounce: ${targets.join(", ")}`;
   scoreSummary.innerHTML = targets
     .map(target => `<li>${target}: Correct - ${scores[target].correct}, Wrong - ${scores[target].wrong}</li>`)
