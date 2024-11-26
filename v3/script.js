@@ -93,36 +93,68 @@ function enableCardDragging(card) {
     type: "x,y",
     throwProps: true, // Enable inertia
     onDragEnd: function () {
-      const direction = this.x > window.innerWidth / 2 ? "right" : "left";
+      const velocityThreshold = 1.5; // Minimum velocity to register a flick
+      const isRightFlick =
+        this.getDirection("velocity") === "right" || this.velocityX > velocityThreshold;
+      const isLeftFlick =
+        this.getDirection("velocity") === "left" || this.velocityX < -velocityThreshold;
+
+      // Determine the direction based on the flick
+      const direction = isRightFlick ? "right" : isLeftFlick ? "left" : null;
+
+      if (!direction) {
+        // If no strong flick, reset card position
+        gsap.to(this.target, { x: 0, y: 0, duration: 0.5, ease: "power1.out" });
+        return;
+      }
+
       const text = this.target.innerText;
 
       // Calculate off-screen end positions
-      const endX = direction === "right" ? window.innerWidth + 300 : -300;
-      const endY = this.y + (Math.random() * 200 - 100); // Add a slight random tilt for realism
-
+      const endX = direction === "right" ? window.innerWidth + 300 : -window.innerWidth -300; // Ensures identical behavior
+      const endY = this.y + (Math.random() * 200 - 100); // Add slight random tilt for realism
+      console.log(endX);
       // Animate the card off-screen with inertia
       gsap.to(this.target, {
         x: endX,
         y: endY,
         scale: 0.1,
         opacity: 0,
-        duration: 1.5, // Adjust duration for smoother exit
+        duration: 1, // Shorter for a flick-like motion
         ease: "power1.out",
-        onComplete: () => this.target.remove()
+        onComplete: () => this.target.remove(),
       });
 
-      // Update scores
+      // Update scores based on the direction
       if (direction === "right") scores[text].correct++;
-      else scores[text].wrong++;
+      else if (direction === "left") scores[text].wrong++;
 
       // Log updated scores
       console.log(`Updated scores for "${text}":`, scores[text]);
 
       // Render the next card
       renderNextCard();
-    }
+    },
+    onDrag: function () {
+      // Optional visual feedback for dragging direction
+      const threshold = 50; // Change background slightly for subtle feedback
+      if (this.x > threshold) {
+        card.style.backgroundColor = "#d4f4dd"; // Green for "correct"
+      } else if (this.x < -threshold) {
+        card.style.backgroundColor = "#f8d7da"; // Red for "wrong"
+      } else {
+        card.style.backgroundColor = ""; // Reset to default
+      }
+    },
+    onRelease: function () {
+      // Reset card background after release
+      card.style.backgroundColor = "";
+    },
   });
 }
+
+
+
 
 
 function checkGameCompletion() {
