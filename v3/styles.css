@@ -13,32 +13,50 @@ body {
   
   #flashcard-container {
     position: relative;
-    width: 100%; /* Full width of the screen */
-    height: 70vh; /* Proportional height */
+    width: 100%;
+    height: 70vh;
     margin: 0 auto;
-    overflow: visible; /* Allows cards and shadows to appear outside the container */
+    overflow: visible;
+    margin-bottom: 20px; /* Add spacing below the flashcard container */
   }
   
+  
   .flashcard {
-    position: absolute; /* Allow free movement without resizing issues */
+    position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%); /* Center the card inside the container */
-    width: 90%; /* Slightly narrower than the container */
+    transform: translate(-50%, -50%);
+    width: 90%;
     height: 100%;
-    background-color: #fff;
-    border: 2px solid #ddd;
-    border-radius: 12px;
     display: flex;
     justify-content: center;
     align-items: center;
     font-size: 24px;
     font-weight: bold;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25); /* Ensure the shadow is visible */
-    margin: 0; /* Remove any margins */
+    margin: 0;
+    border-radius: 12px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
     transition: transform 0.3s ease-out, background-color 0.3s ease-out;
+    z-index: 0;
+    opacity: 0; /* Non-active cards are hidden */
   }
-
+  
   .flashcard.active {
     z-index: 10;
+    opacity: 1; /* Active card is visible */
   }
+  
+  
+  .flashcard.card {
+    background-color: #fff;
+    border: 1px solid #ddd; /* Maintain consistent card border */
+  }
+
+  #game-over {
+  margin-top: 20px; /* Add spacing above the game-over section */
+  text-align: center;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
