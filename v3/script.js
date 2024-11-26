@@ -59,36 +59,51 @@ document.addEventListener("DOMContentLoaded", () => {
   
     function initializeFlashcards() {
         flashcardContainer.innerHTML = ""; // Clear any existing cards
-        renderNextCard(); // Start with the first card
+      
+        // Create flashcards for all entered texts (texts array)
+        const randomizedTexts = texts.sort(() => Math.random() - 0.5);
+      
+        randomizedTexts.forEach(text => {
+          const card = document.createElement("div");
+          card.classList.add("flashcard");
+          card.innerText = text;
+          flashcardContainer.appendChild(card);
+      
+          // Enable dragging for each card
+          enableCardDragging(card);
+        });
+      
+        setActiveCard(); // Set the first card as active
       }
       
+      
+      
       function renderNextCard() {
-        // Check if the game is complete before rendering the next card
         if (checkGameCompletion()) return;
       
-        // Find remaining targets that haven't met the target score
         const remainingTargets = targets.filter(target => scores[target].correct < targetScore);
-        if (remainingTargets.length === 0) return; // Stop rendering if all targets are complete
+        if (remainingTargets.length === 0) return;
       
-        // Pick a random target from the remaining ones
         const nextCardText = remainingTargets[Math.floor(Math.random() * remainingTargets.length)];
       
-        // Create the new card
         const card = document.createElement("div");
         card.classList.add("flashcard");
         card.innerText = nextCardText;
       
-        // Append the card to the container
+        // Append the card, hidden initially
+        card.style.opacity = "0";
         flashcardContainer.appendChild(card);
       
-        // Enable dragging for the new card
         enableCardDragging(card);
       
-        // If this is the only card, make it active
-        if (flashcardContainer.childElementCount === 1) {
+        // If no active card exists, set this card as active
+        if (document.querySelectorAll(".flashcard.active").length === 0) {
           setActiveCard();
         }
       }
+      
+      
+      
       
       
       
@@ -97,94 +112,100 @@ document.addEventListener("DOMContentLoaded", () => {
       function setActiveCard() {
         const cards = document.querySelectorAll(".flashcard");
       
-        // Remove active class from all cards and hide them
+        // Remove active class and hide all cards
         cards.forEach(card => {
           card.classList.remove("active");
           card.style.opacity = "0";
         });
       
-        // Activate the first card in the container
+        // Activate and show the first card in the list
         if (cards.length > 0) {
           cards[0].classList.add("active");
-          cards[0].style.opacity = "1";
+          cards[0].style.opacity = "1"; // Make the active card visible
         }
       }
       
       
       
-  
-      function enableCardDragging(card) {
-        Draggable.create(card, {
-          type: "x,y",
-          throwProps: true,
-          onDragEnd: function () {
-            const velocityThreshold = 1.5; // Minimum velocity to register a flick
-            const isRightFlick =
-              this.getDirection("velocity") === "right" || this.velocityX > velocityThreshold;
-            const isLeftFlick =
-              this.getDirection("velocity") === "left" || this.velocityX < -velocityThreshold;
+      function enableCardDragging(card = null) {
+        const cards = card ? [card] : document.querySelectorAll(".flashcard");
       
-            // Determine the direction based on the flick
-            const direction = isRightFlick ? "right" : isLeftFlick ? "left" : null;
+        cards.forEach(cardElement => {
+          Draggable.create(cardElement, {
+            type: "x,y",
+            throwProps: true,
+            onDragEnd: function () {
+              const velocityThreshold = 1.5; // Minimum velocity to register a flick
+              const isRightFlick =
+                this.getDirection("velocity") === "right" || this.velocityX > velocityThreshold;
+              const isLeftFlick =
+                this.getDirection("velocity") === "left" || this.velocityX < -velocityThreshold;
       
-            if (!direction) {
-              // If no strong flick, reset card position
-              gsap.to(this.target, { x: 0, y: 0, duration: 0.5, ease: "power1.out" });
-              return;
-            }
+              const direction = isRightFlick ? "right" : isLeftFlick ? "left" : null;
+              if (!direction) {
+                gsap.to(this.target, { x: 0, y: 0, duration: 0.5, ease: "power1.out" });
+                return;
+              }
       
-            const text = this.target.innerText;
+              const text = this.target.innerText;
       
-            // Calculate off-screen end positions
-            const endX = direction === "right" ? window.innerWidth + 300 : -300;
-            const endY = this.y + (Math.random() * 200 - 100);
+              const endX = direction === "right" ? window.innerWidth + 300 : -window.innerWidth - 300;
+              const endY = this.y + (Math.random() * 200 - 100);
       
-            // Animate the card off-screen with inertia
-            gsap.to(this.target, {
-              x: endX,
-              y: endY,
-              scale: 0.1,
-              opacity: 0,
-              duration: 1,
-              ease: "power1.out",
-              onComplete: () => {
-                this.target.remove(); // Remove the card from DOM
-                setActiveCard(); // Activate the next card
-                renderNextCard(); // Dynamically render the next card
-              },
-            });
+              gsap.to(this.target, {
+                x: endX,
+                y: endY,
+                scale: 0.1,
+                opacity: 0,
+                duration: .75,
+                ease: "power1.out",
+                onComplete: () => {
+                  this.target.remove(); // Remove the card from DOM
+                  setActiveCard(); // Activate the next card
+                  renderNextCard(); // Dynamically render the next card
+                },
+              });
+              
+
+              // Update scores only for targeted texts
+              if (targets.includes(text)) {
+                if (direction === "right") {
+                  scores[text].correct++;
+                  console.log(`Correct: ${text} - ${scores[text].correct} (Target: ${targetScore})`);
+                } else {
+                  scores[text].wrong++;
+                  console.log(`Wrong: ${text} - ${scores[text].wrong}`);
+                }
+              } else {
+                console.log(`Skipped score update for non-target text: ${text}`);
+              }
       
-            // Update scores based on the direction
-            if (direction === "right") {
-              scores[text].correct++;
-              console.log(`Correct: ${text} - ${scores[text].correct} (Target: ${targetScore})`);
-            } else {
-              scores[text].wrong++;
-              console.log(`Wrong: ${text} - ${scores[text].wrong}`);
-            }
-      
-            // Check game completion
-            checkGameCompletion();
-          },
+              // Check game completion
+              checkGameCompletion();
+            },
+          });
         });
       }
       
+  
+      
+      
       
       
   
-    function checkGameCompletion() {
-      if (targets.every(target => scores[target].correct >= targetScore)) {
-        console.log("Game over! All targets met their target score.");
-        endGame();
-        return true;
+      function checkGameCompletion() {
+        if (targets.every(target => scores[target].correct >= targetScore)) {
+          console.log("Game over! All targets met their target score.");
+          endGame();
+          return true;
+        }
+        console.log(
+          "Running totals:",
+          targets.map(target => `${target} - Correct: ${scores[target].correct}, Wrong: ${scores[target].wrong}`)
+        );
+        return false;
       }
-      console.log(
-        "Running totals:",
-        targets.map(target => `${target} - Correct: ${scores[target].correct}, Wrong: ${scores[target].wrong}`)
-      );
-    
-      return false;
-    }
+      
   
     function endGame() {
         const flashcardContainer = document.getElementById("flashcard-container");
