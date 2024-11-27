@@ -4,7 +4,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const targetList = document.getElementById("target-list");
     const flashcardContainer = document.getElementById("flashcard-container");
     const gameOverElement = document.getElementById("game-over");
+    const textHeader = document.getElementById("selectItem");
+    const lessonItems = document.getElementById("chosenItems");
    
+
     let texts = [];
     let targets = [];
     const scores = {};
@@ -21,9 +24,10 @@ document.addEventListener("DOMContentLoaded", () => {
       textList.innerHTML = texts
         .map(
           (item, index) =>
-            `<li class="list-group-item">${item} <button class="btn btn-sm btn-secondary" onclick="addTarget(${index})">Add to Targets</button></li>`
+            `<li class="list-group-item"><span>${item}</span> <button class="btn btn-sm btn-secondary" onclick="addTarget(${index})">Add to Lesson</button></li>`
         )
         .join("");
+        textHeader.style.display = "block"; 
     }
   
     window.addTarget = function (index) {
@@ -33,12 +37,14 @@ document.addEventListener("DOMContentLoaded", () => {
         scores[target] = { correct: 0, wrong: 0 };
       }
       updateTargetList();
+
     };
   
     function updateTargetList() {
       targetList.innerHTML = targets
         .map(target => `<li class="list-group-item">${target}</li>`)
         .join("");
+        lessonItems.style.display = "block"; 
     }
   
     // Game logic and global functions remain here
