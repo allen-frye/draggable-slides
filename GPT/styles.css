@@ -113,3 +113,6 @@ body {
 .select-items {
   margin-top: 40px;
 }
+.form-control{
+  font-size: 18px;
+}

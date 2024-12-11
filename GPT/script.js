@@ -231,7 +231,7 @@ document.addEventListener("DOMContentLoaded", () => {
         scoreSummary.innerHTML = targets
           .map(
             target =>
-              `<li>${target}: Correct - ${scores[target].correct}, Wrong - ${scores[target].wrong}</li>`
+              `<li class="list-group-item">${target}: Correct - ${scores[target].correct}, Wrong - ${scores[target].wrong}</li>`
           )
           .join("");
       
