@@ -17,6 +17,9 @@ document.addEventListener("DOMContentLoaded", () => {
   let learningStyle = "random"; // Default learning style
   let currentIncrement = 0;
   let incrementItems = [];
+  let currentCycle = []; // Tracks the current increment cycle
+  let cycleIndex = 0; // Tracks the index within the current cycle
+  let lessonTargetCorrect = true; // Tracks whether all lesson targets are correct
 
   document.getElementById("add-texts").addEventListener("click", () => {
     const input = textInput.value.split(",").map(item => item.trim());
@@ -96,66 +99,69 @@ document.addEventListener("DOMContentLoaded", () => {
     currentIncrement = 0;
     incrementItems = texts.filter(text => !targets.includes(text));
     shuffleArray(incrementItems);
-    console.log(`Incremental game initialized. Items: ${incrementItems}`);
+    console.log(`Incremental game initialized. Increment Items: ${incrementItems}`);
+    updateCycle(); // Build the first cycle
+  }
+
+  function updateCycle() {
+    currentCycle = [...targets]; // Always start with lesson targets
+    const incrementPool = incrementItems.slice(0, currentIncrement + 1);
+    currentCycle.push(...incrementPool); // Add all increment items
+    shuffleArray(currentCycle.slice(targets.length)); // Shuffle only the non-target portion
+    cycleIndex = 0; // Reset index
+    lessonTargetCorrect = true; // Reset the correctness tracker for this increment
+    console.log(`New Cycle Created: ${currentCycle}`);
   }
 
   function renderNextIncrementalCard() {
-    // Check if the game is complete
-    if (checkGameCompletion()) return;
+    // Check if lesson targets have met the required correct answers
+    const lessonTargetsCompleted = targets.every(target => scores[target].correct >= targetScore);
 
-    const remainingTargets = targets.filter(target => scores[target].correct < targetScore);
-    console.log(`Remaining Targets: ${remainingTargets}`);
-    console.log(`Current Increment: ${currentIncrement}`);
-    console.log(`Increment Items: ${incrementItems}`);
-
-    let nextCardText;
-
-    // Alternate between lesson item and increment item
-    if (remainingTargets.length > 0 && currentIncrement % 2 === 0) {
-      // Show a lesson item
-      nextCardText = remainingTargets[Math.floor(Math.random() * remainingTargets.length)];
-      console.log(`Showing lesson item: ${nextCardText}`);
-    } else {
-      // Show a random increment item
-      const incrementPool = incrementItems.slice(0, Math.min(currentIncrement + 1, incrementItems.length));
-      nextCardText = incrementPool[Math.floor(Math.random() * incrementPool.length)];
-      console.log(`Showing random increment item: ${nextCardText}`);
+    if (lessonTargetsCompleted && currentIncrement >= incrementItems.length) {
+        // Only end game if lesson targets are complete and the final increment is done
+        endGame();
+        return;
     }
 
-    if (!nextCardText) {
-      console.log("No valid next card. Ending game.");
-      endGame();
-      return;
+    if (cycleIndex >= currentCycle.length) {
+        // If we've cycled through all cards, check correctness of lesson targets
+        if (!lessonTargetCorrect) {
+            console.log("Repeating the current increment due to incorrect lesson target.");
+            updateCycle(); // Repeat the current increment
+        } else {
+            currentIncrement++;
+            console.log(`Increment increased to: ${currentIncrement}`);
+            updateCycle(); // Move to the next increment
+        }
     }
 
-    // Create and render the card
+    // Display the next card in the current cycle
+    const nextCardText = currentCycle[cycleIndex];
+    console.log(`Displaying Card: ${nextCardText}`);
+    cycleIndex++;
+
     const card = document.createElement("div");
     card.classList.add("flashcard");
     card.innerText = nextCardText;
-    card.style.opacity = "0"; // Start hidden
+    card.style.opacity = "0";
     flashcardContainer.appendChild(card);
 
-    enableCardDragging(card); // Enable dragging for the new card
-    setActiveCard(); // Set the card as active
+    enableCardDragging(card);
+    setActiveCard();
+}
 
-    // Increment logic
-    if (remainingTargets.length === 0 || nextCardText !== remainingTargets[0]) {
-      currentIncrement++;
-      console.log(`Increment increased to: ${currentIncrement}`);
-    }
-  }
 
   function setActiveCard() {
     const cards = document.querySelectorAll(".flashcard");
     cards.forEach(card => {
       card.classList.remove("active");
-      card.style.opacity = "0"; // Explicitly hide inactive cards
+      card.style.opacity = "0";
     });
 
     if (cards.length > 0) {
       const firstCard = cards[0];
       firstCard.classList.add("active");
-      firstCard.style.opacity = "1"; // Explicitly show the active card
+      firstCard.style.opacity = "1";
     }
   }
 
@@ -177,20 +183,18 @@ document.addEventListener("DOMContentLoaded", () => {
           ease: "power1.out",
           onComplete: () => {
             this.target.remove();
-            if (learningStyle === "random") {
-              setActiveCard();
-            } else if (learningStyle === "incremental") {
-              renderNextIncrementalCard();
-            }
+            renderNextIncrementalCard();
           },
           clearProps: "opacity,transform"
         });
 
-        // Update scores for lesson items only
         if (targets.includes(text)) {
           if (direction === "right") {
             scores[text].correct++;
             console.log(`Correct: ${text} - ${scores[text].correct}`);
+          } else {
+            console.log(`Incorrect: ${text}`);
+            lessonTargetCorrect = false; // Mark as incorrect for the increment
           }
         }
       }
@@ -199,9 +203,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function checkGameCompletion() {
     const allTargetsMet = targets.every(target => scores[target].correct >= targetScore);
-    const allIncrementsComplete = currentIncrement >= incrementItems.length;
 
-    if (allTargetsMet && allIncrementsComplete) {
+    if (allTargetsMet) {
       endGame();
       return true;
     }
